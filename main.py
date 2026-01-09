@@ -42,6 +42,7 @@ os.environ.pop("DYLD_LIBRARY_PATH", None)
 
 USERNAME = os.environ.get("LINUXDO_USERNAME")
 PASSWORD = os.environ.get("LINUXDO_PASSWORD")
+ACCOUNT_NAME = os.environ.get("ACCOUNT_NAME", USERNAME)  # 账号标识，默认使用用户名
 BROWSE_ENABLED = os.environ.get("BROWSE_ENABLED", "true").strip().lower() not in [
     "false",
     "0",
@@ -54,6 +55,7 @@ if not PASSWORD:
 GOTIFY_URL = os.environ.get("GOTIFY_URL")  # Gotify 服务器地址
 GOTIFY_TOKEN = os.environ.get("GOTIFY_TOKEN")  # Gotify 应用的 API Token
 SC3_PUSH_KEY = os.environ.get("SC3_PUSH_KEY")  # Server酱³ SendKey
+FEISHU_WEBHOOK = os.environ.get("FEISHU_WEBHOOK")  # 飞书机器人 Webhook 地址
 
 HOME_URL = "https://linux.do/"
 LOGIN_URL = "https://linux.do/login"
@@ -295,12 +297,33 @@ class LinuxDoBrowser:
         if browse_enabled:
             status_msg += " + 浏览任务完成"
 
+        # 飞书通知
+        if FEISHU_WEBHOOK:
+            try:
+                response = requests.post(
+                    FEISHU_WEBHOOK,
+                    json={
+                        "msg_type": "text",
+                        "content": {
+                            "text": f"【{ACCOUNT_NAME}】LinuxDo 签到通知\n{status_msg}"
+                        }
+                    },
+                    timeout=10
+                )
+                response.raise_for_status()
+                logger.success("消息已推送至飞书")
+            except Exception as e:
+                logger.error(f"飞书推送失败: {str(e)}")
+        else:
+            logger.info("未配置飞书环境变量，跳过飞书通知发送")
+
+        # Gotify通知
         if GOTIFY_URL and GOTIFY_TOKEN:
             try:
                 response = requests.post(
                     f"{GOTIFY_URL}/message",
                     params={"token": GOTIFY_TOKEN},
-                    json={"title": "LINUX DO", "message": status_msg, "priority": 1},
+                    json={"title": f"【{ACCOUNT_NAME}】LINUX DO", "message": status_msg, "priority": 1},
                     timeout=10,
                 )
                 response.raise_for_status()
@@ -320,7 +343,7 @@ class LinuxDoBrowser:
 
             uid = match.group(1)
             url = f"https://{uid}.push.ft07.com/send/{SC3_PUSH_KEY}"
-            params = {"title": "LINUX DO", "desp": status_msg}
+            params = {"title": f"【{ACCOUNT_NAME}】LINUX DO", "desp": status_msg}
 
             attempts = 5
             for attempt in range(attempts):

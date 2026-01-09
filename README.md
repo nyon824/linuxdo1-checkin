@@ -31,6 +31,7 @@
 |--------------------|-------------------|------------------------------------|
 | `LINUXDO_USERNAME` | 你的 LinuxDo 用户名或邮箱 | `your_username` 或 `your@email.com` |
 | `LINUXDO_PASSWORD` | 你的 LinuxDo 密码     | `your_password`                    |
+| `ACCOUNT_NAME`     | 账号标识（用于区分多账号）    | `账号1`、`主账号`、`工作账号`（可选，默认使用用户名）        |
 
 ~~之前的USERNAME和PASSWORD环境变量仍然可用，但建议使用新的环境变量~~
 
@@ -43,6 +44,7 @@
 | `TELEGRAM_TOKEN`  | Telegram Bot Token   | `123456789:ABCdefghijklmnopqrstuvwxyz` |
 | `TELEGRAM_USERID` | Telegram 用户 ID       | `123456789`                            |
 | `SC3_PUSH_KEY`    | Server酱³ SendKey     | `sctpxxxxt`                             |
+| `FEISHU_WEBHOOK`  | 飞书机器人 Webhook 地址 | `https://open.feishu.cn/open-apis/bot/v2/hook/xxxxxxxx` |
 | `BROWSE_ENABLED`  | 是否启用浏览帖子功能        | `true` 或 `false`，默认为 `true`           |
 
 ---
@@ -59,10 +61,12 @@
     - 在 GitHub 仓库的 `Settings` -> `Secrets and variables` -> `Actions` 中添加以下变量：
         - `LINUXDO_USERNAME`：你的 LinuxDo 用户名或邮箱。
         - `LINUXDO_PASSWORD`：你的 LinuxDo 密码。
+        - (可选) `ACCOUNT_NAME`：账号标识，用于区分多个账号（如"账号1"、"主账号"等），默认使用用户名。
         - (可选) `BROWSE_ENABLED`：是否启用浏览帖子，`true` 或 `false`，默认为 `true`。
         - (可选) `GOTIFY_URL` 和 `GOTIFY_TOKEN`。
         - (可选) `SC3_PUSH_KEY`。
         - (可选) `TELEGRAM_TOKEN` 和 `TELEGRAM_USERID`。
+        - (可选) `FEISHU_WEBHOOK`。
 
 2. **手动触发工作流**：
     - 进入 GitHub 仓库的 `Actions` 选项卡。
@@ -120,12 +124,14 @@
     - 需要配置以下变量：
         - `LINUXDO_USERNAME`：你的LinuxDo用户名/邮箱
         - `LINUXDO_PASSWORD`：你的LinuxDo密码
+        - (可选) `ACCOUNT_NAME`：账号标识，用于区分多个账号（如"账号1"、"主账号"等），默认使用用户名
         - (可选) `BROWSE_ENABLED`：是否启用浏览帖子功能，`true` 或 `false`，默认为 `true`
         - (可选) `GOTIFY_URL`：Gotify服务器地址
         - (可选) `GOTIFY_TOKEN`：Gotify应用Token
-        - (可选) `SC3_PUSH_KEY`：Server酱³ SendKey        
+        - (可选) `SC3_PUSH_KEY`：Server酱³ SendKey
         - (可选) `TELEGRAM_TOKEN`：Telegram Bot Token
-        - (可选) `TELEGRAM_USERID`：Telegram用户ID
+        - (optional) `TELEGRAM_USERID`：Telegram用户ID
+        - (可选) `FEISHU_WEBHOOK`：飞书机器人 Webhook 地址
 
 4. **手动拉取脚本**
     - 首次添加仓库后不会立即拉取脚本，需要等待到定时任务触发，当然可以手动触发拉取
@@ -159,6 +165,37 @@
 2. 用户 ID：与 [@userinfobot](https://t.me/userinfobot) 对话获取
 
 未配置时将自动跳过通知功能，不影响签到。
+
+
+### 飞书通知
+
+可选功能：配置飞书机器人通知，实时获取签到结果。
+
+需要在环境变量中配置：
+- `FEISHU_WEBHOOK`：飞书机器人的 Webhook 地址
+
+获取方法：
+1. 在飞书中创建自定义机器人
+2. 获取 Webhook 地址（格式：`https://open.feishu.cn/open-apis/bot/v2/hook/xxxxxxxx`）
+3. 将 Webhook 地址配置到环境变量中
+
+未配置时将自动跳过飞书通知功能，不影响签到。
+
+### 多账号部署
+
+如果你有多个 LinuxDo 账号需要签到，可以：
+
+1. **为每个账号设置不同的 `ACCOUNT_NAME`**：
+   - 在 GitHub Actions 中为每个工作流或仓库设置不同的 `ACCOUNT_NAME` 环境变量
+   - 在青龙面板中为每个环境变量配置设置不同的 `ACCOUNT_NAME`
+   - 通知消息会显示为：【账号1】LinuxDo 签到通知
+
+2. **示例配置**：
+   - 账号1：`ACCOUNT_NAME=主账号`、`LINUXDO_USERNAME=main@example.com`
+   - 账号2：`ACCOUNT_NAME=小号`、`LINUXDO_USERNAME=alt@example.com`
+   - 账号3：`ACCOUNT_NAME=工作账号`、`LINUXDO_USERNAME=work@example.com`
+
+这样在收到通知时，就能清楚知道是哪个账号的签到结果了。
 
 
 ## 自动更新
